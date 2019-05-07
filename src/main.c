@@ -6,15 +6,27 @@ extern "C" /* Use C linkage for kernel_main. */
 
 void kernel_main(unsigned long r0, unsigned long r1, unsigned long atags)
 {
+	int size = 0;
+	char* kernel = 0x80000;
 	init_uart();
 
-	send('H');
-	send('E');
-	send('L');
-	send('L');
-	send('O');
+	send('S');
+	send(3);
+	send(3);
+	send(3);
+
+	size = receive();
+	size |= receive() << 8;
+	size |= receive() << 16;
+	size |= receive() << 24;
 	
-	while(1){
-		send(receive());
+	send('O');
+	send('K');
+
+	while(size--){
+		*kernel++ = receive();
 	}
+	kernel = 0x80000;
+	asm("mov lr, #0x80000");
+	asm("ret");
 }

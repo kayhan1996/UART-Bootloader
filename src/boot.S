@@ -1,3 +1,5 @@
+#define relocation  2048
+
 .section ".text.boot"
 
 .globl _start
@@ -10,48 +12,29 @@ hang:
     b hang
 
 1:
+
+    //relocate -2048
+    ldr x0, =_start
+    ldr x1, =_start-relocation
+    ldr x3, =relocation
+reloc:
+    ldr x2, [x0], #8
+    str x2, [x1], #8
+    sub x3, x3, #8
+    cbnz x3, reloc
     
-    adr x0, __bss_start //Defined in linker.ld
-    adr x1, __bss_end   //Defined in linker.ld
+    adr x0, __bss_start-relocation //Defined in linker.ld
+    adr x1, __bss_end-relocation   //Defined in linker.ld
     sub x1, x1, x0
 
-    bl  memzero    
+    bl  memzero-relocation
 
-    ldr x1, =__start
-    
-    msr     sp_el1, x1
-    // enable CNTP for EL1
-    mrs     x0, cnthctl_el2
-    orr     x0, x0, #3
-    msr     cnthctl_el2, x0
-    msr     cntvoff_el2, xzr
-    //enable FPU
-    mov     x0, #0x33FF
-    msr     cptr_el2, x0
-    msr     hstr_el2, xzr
-    mov     x0, #(3 << 20)
-    msr     cpacr_el1, x0
-    // enable AArch64 in EL1
-    mov     x0, #(1 << 31)      // AArch64
-    orr     x0, x0, #(1 << 1)   // SWIO hardwired on Pi3
-    msr     hcr_el2, x0
-    mrs     x0, hcr_el2
-    // Setup SCTLR access
-    mov     x2, #0x0800
-    movk    x2, #0x30d0, lsl #16
-    msr     sctlr_el1, x2
-    // change execution level to EL1
-    mov     x2, #0x3c4
-    msr     spsr_el2, x2
-    adr     x2, 5f
-    msr     elr_el2, x2
-    
-    eret
+    ldr x1, =__start-relocation
+
 5:
     mov sp, x1
-    bl  kernel_main     //jump to main function
-    b   hang            //main should never return
-
+    bl  kernel_main-relocation     //jump to main function
+    b hang
 
 memzero:
 	str xzr, [x0], #8

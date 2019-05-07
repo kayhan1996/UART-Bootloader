@@ -56,7 +56,7 @@ build: $(OBJ_FILES) $(HEADER_FILES)
 	#OPTIONAL, STRIPS KERNEL OF DEBUG SYMBOLS INTO SEPERATE FILE
 	$(COMPILER)-objcopy --only-keep-debug $(BIN_DIR)/kernel8.elf kernel.sym
 	$(COMPILER)-objcopy --strip-debug $(BIN_DIR)/kernel8.elf
-	$(COMPILER)-objcopy $(BIN_DIR)/kernel8.elf -O binary ../build/kernel8.img
+	$(COMPILER)-objcopy $(BIN_DIR)/kernel8.elf -O binary kernel8.img
 
 run : build
-	qemu-system-aarch64 -s -S -m 1G -M raspi3 -serial stdio -kernel ../build/kernel8.img -d mmu -d int
+	qemu-system-aarch64 -s -S -m 1G -M raspi3 -serial /dev/tty -kernel ../build/kernel8.img -d mmu -d int

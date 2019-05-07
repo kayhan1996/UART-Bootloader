@@ -13,377 +13,360 @@ _start:
 hang:
 ; b hang
    8000c:	00 00 00 14 	b	#0
-; adr x0, __bss_start //Defined in linker.ld
-   80010:	80 7f 00 10 	adr	x0, #4080
-; adr x1, __bss_end   //Defined in linker.ld
-   80014:	61 7f 00 10 	adr	x1, #4076
+; ldr x0, =_start
+   80010:	80 02 00 58 	ldr	x0, #80
+; ldr x1, =_start-relocation
+   80014:	a1 02 00 58 	ldr	x1, #84
+; ldr x3, =relocation
+   80018:	c3 02 00 58 	ldr	x3, #88
+
+reloc:
+; ldr x2, [x0], #8
+   8001c:	02 84 40 f8 	ldr	x2, [x0], #8
+; str x2, [x1], #8
+   80020:	22 84 00 f8 	str	x2, [x1], #8
+; sub x3, x3, #8
+   80024:	63 20 00 d1 	sub	x3, x3, #8
+; cbnz x3, reloc
+   80028:	a3 ff ff b5 	cbnz	x3, #-12
+; adr x0, __bss_start-relocation //Defined in linker.ld
+   8002c:	a0 3e 00 10 	adr	x0, #2004
+; adr x1, __bss_end-relocation   //Defined in linker.ld
+   80030:	81 3e 00 10 	adr	x1, #2000
 ; sub x1, x1, x0
-   80018:	21 00 00 cb 	sub	x1, x1, x0
-; bl  memzero    
-   8001c:	1b 00 00 94 	bl	#108
-; ldr x1, =__start
-   80020:	c1 03 00 58 	ldr	x1, #120
-; msr     sp_el1, x1
-   80024:	01 41 1c d5 	msr	SP_EL1, x1
-; mrs     x0, cnthctl_el2
-   80028:	00 e1 3c d5 	mrs	x0, CNTHCTL_EL2
-; orr     x0, x0, #3
-   8002c:	00 04 40 b2 	orr	x0, x0, #0x3
-; msr     cnthctl_el2, x0
-   80030:	00 e1 1c d5 	msr	CNTHCTL_EL2, x0
-; msr     cntvoff_el2, xzr
-   80034:	7f e0 1c d5 	msr	CNTVOFF_EL2, xzr
-; mov     x0, #0x33FF
-   80038:	e0 7f 86 d2 	mov	x0, #13311
-; msr     cptr_el2, x0
-   8003c:	40 11 1c d5 	msr	CPTR_EL2, x0
-; msr     hstr_el2, xzr
-   80040:	7f 11 1c d5 	msr	HSTR_EL2, xzr
-; mov     x0, #(3 << 20)
-   80044:	00 06 a0 d2 	mov	x0, #3145728
-; msr     cpacr_el1, x0
-   80048:	40 10 18 d5 	msr	CPACR_EL1, x0
-; mov     x0, #(1 << 31)      // AArch64
-   8004c:	00 00 b0 d2 	mov	x0, #2147483648
-; orr     x0, x0, #(1 << 1)   // SWIO hardwired on Pi3
-   80050:	00 00 7f b2 	orr	x0, x0, #0x2
-; msr     hcr_el2, x0
-   80054:	00 11 1c d5 	msr	HCR_EL2, x0
-; mrs     x0, hcr_el2
-   80058:	00 11 3c d5 	mrs	x0, HCR_EL2
-; mov     x2, #0x0800
-   8005c:	02 00 81 d2 	mov	x2, #2048
-; movk    x2, #0x30d0, lsl #16
-   80060:	02 1a a6 f2 	movk	x2, #12496, lsl #16
-; msr     sctlr_el1, x2
-   80064:	02 10 18 d5 	msr	SCTLR_EL1, x2
-; mov     x2, #0x3c4
-   80068:	82 78 80 d2 	mov	x2, #964
-; msr     spsr_el2, x2
-   8006c:	02 40 1c d5 	msr	SPSR_EL2, x2
-; adr     x2, 5f
-   80070:	62 00 00 10 	adr	x2, #12
-; msr     elr_el2, x2
-   80074:	22 40 1c d5 	msr	ELR_EL2, x2
-; eret
-   80078:	e0 03 9f d6 	eret
+   80034:	21 00 00 cb 	sub	x1, x1, x0
+; bl  memzero-relocation
+   80038:	05 fe ff 97 	bl	#-2028
+; ldr x1, =__start-relocation
+   8003c:	e1 01 00 58 	ldr	x1, #60
 ; mov sp, x1
-   8007c:	3f 00 00 91 	mov	sp, x1
-; bl  kernel_main     //jump to main function
-   80080:	36 00 00 94 	bl	#216
-; b   hang            //main should never return
-   80084:	e2 ff ff 17 	b	#-120
+   80040:	3f 00 00 91 	mov	sp, x1
+; bl  kernel_main-relocation     //jump to main function
+   80044:	3d fe ff 97 	bl	#-1804
+; b hang
+   80048:	f1 ff ff 17 	b	#-60
 
 memzero:
 ; str xzr, [x0], #8
-   80088:	1f 84 00 f8 	str	xzr, [x0], #8
+   8004c:	1f 84 00 f8 	str	xzr, [x0], #8
 ; subs x1, x1, #8
-   8008c:	21 20 00 f1 	subs	x1, x1, #8
+   80050:	21 20 00 f1 	subs	x1, x1, #8
 ; b.gt memzero
-   80090:	cc ff ff 54 	b.gt	#-8
+   80054:	cc ff ff 54 	b.gt	#-8
 ; ret
-   80094:	c0 03 5f d6 	ret
+   80058:	c0 03 5f d6 	ret
+   8005c:	00 00 00 00  <unknown>
 
 $d:
-   80098:	00 00 08 00 	.word	0x00080000
-   8009c:	00 00 00 00 	.word	0x00000000
+   80060:	00 00 08 00 	.word	0x00080000
+   80064:	00 00 00 00 	.word	0x00000000
+   80068:	00 f8 07 00 	.word	0x0007f800
+   8006c:	00 00 00 00 	.word	0x00000000
+   80070:	00 08 00 00 	.word	0x00000800
+   80074:	00 00 00 00 	.word	0x00000000
+   80078:	00 f8 07 00 	.word	0x0007f800
+   8007c:	00 00 00 00 	.word	0x00000000
 
 call_mailbox:
 ; int call_mailbox(uint32_t* message, uint8_t channel){
-   800a0:	ff 83 00 d1 	sub	sp, sp, #32
-   800a4:	e0 07 00 f9 	str	x0, [sp, #8]
-   800a8:	e1 1f 00 39 	strb	w1, [sp, #7]
+   80080:	ff 83 00 d1 	sub	sp, sp, #32
+   80084:	e0 07 00 f9 	str	x0, [sp, #8]
+   80088:	e1 1f 00 39 	strb	w1, [sp, #7]
 ; uint32_t address = (uint32_t)message;
-   800ac:	e0 07 40 f9 	ldr	x0, [sp, #8]
-   800b0:	e0 1f 00 b9 	str	w0, [sp, #28]
+   8008c:	e0 07 40 f9 	ldr	x0, [sp, #8]
+   80090:	e0 1f 00 b9 	str	w0, [sp, #28]
 ; address &= ~(0xF);  
-   800b4:	e0 1f 40 b9 	ldr	w0, [sp, #28]
-   800b8:	00 6c 1c 12 	and	w0, w0, #0xfffffff0
-   800bc:	e0 1f 00 b9 	str	w0, [sp, #28]
+   80094:	e0 1f 40 b9 	ldr	w0, [sp, #28]
+   80098:	00 6c 1c 12 	and	w0, w0, #0xfffffff0
+   8009c:	e0 1f 00 b9 	str	w0, [sp, #28]
 ; address |= (channel & 0xF);
-   800c0:	e0 1f 40 39 	ldrb	w0, [sp, #7]
-   800c4:	00 0c 00 12 	and	w0, w0, #0xf
-   800c8:	e1 1f 40 b9 	ldr	w1, [sp, #28]
-   800cc:	20 00 00 2a 	orr	w0, w1, w0
-   800d0:	e0 1f 00 b9 	str	w0, [sp, #28]
+   800a0:	e0 1f 40 39 	ldrb	w0, [sp, #7]
+   800a4:	00 0c 00 12 	and	w0, w0, #0xf
+   800a8:	e1 1f 40 b9 	ldr	w1, [sp, #28]
+   800ac:	20 00 00 2a 	orr	w0, w1, w0
+   800b0:	e0 1f 00 b9 	str	w0, [sp, #28]
 ; while(*STATUS & FULL){asm("");}
-   800d4:	01 00 00 14 	b	#4
-   800d8:	00 13 97 d2 	mov	x0, #47256
-   800dc:	00 e0 a7 f2 	movk	x0, #16128, lsl #16
-   800e0:	00 00 40 b9 	ldr	w0, [x0]
-   800e4:	1f 00 00 71 	cmp	w0, #0
-   800e8:	8b ff ff 54 	b.lt	#-16
+   800b4:	01 00 00 14 	b	#4
+   800b8:	00 13 97 d2 	mov	x0, #47256
+   800bc:	00 e0 a7 f2 	movk	x0, #16128, lsl #16
+   800c0:	00 00 40 b9 	ldr	w0, [x0]
+   800c4:	1f 00 00 71 	cmp	w0, #0
+   800c8:	8b ff ff 54 	b.lt	#-16
 ; *WRITE = address; 
-   800ec:	00 14 97 d2 	mov	x0, #47264
-   800f0:	00 e0 a7 f2 	movk	x0, #16128, lsl #16
-   800f4:	e1 1f 40 b9 	ldr	w1, [sp, #28]
-   800f8:	01 00 00 b9 	str	w1, [x0]
+   800cc:	00 14 97 d2 	mov	x0, #47264
+   800d0:	00 e0 a7 f2 	movk	x0, #16128, lsl #16
+   800d4:	e1 1f 40 b9 	ldr	w1, [sp, #28]
+   800d8:	01 00 00 b9 	str	w1, [x0]
 ; while(*STATUS & EMPTY){asm("");}
-   800fc:	01 00 00 14 	b	#4
-   80100:	00 13 97 d2 	mov	x0, #47256
-   80104:	00 e0 a7 f2 	movk	x0, #16128, lsl #16
-   80108:	00 00 40 b9 	ldr	w0, [x0]
-   8010c:	00 00 02 12 	and	w0, w0, #0x40000000
-   80110:	1f 00 00 71 	cmp	w0, #0
-   80114:	61 ff ff 54 	b.ne	#-20
+   800dc:	01 00 00 14 	b	#4
+   800e0:	00 13 97 d2 	mov	x0, #47256
+   800e4:	00 e0 a7 f2 	movk	x0, #16128, lsl #16
+   800e8:	00 00 40 b9 	ldr	w0, [x0]
+   800ec:	00 00 02 12 	and	w0, w0, #0x40000000
+   800f0:	1f 00 00 71 	cmp	w0, #0
+   800f4:	61 ff ff 54 	b.ne	#-20
 ; if(address = *READ){
-   80118:	00 10 97 d2 	mov	x0, #47232
-   8011c:	00 e0 a7 f2 	movk	x0, #16128, lsl #16
-   80120:	00 00 40 b9 	ldr	w0, [x0]
-   80124:	e0 1f 00 b9 	str	w0, [sp, #28]
-   80128:	e0 1f 40 b9 	ldr	w0, [sp, #28]
-   8012c:	1f 00 00 71 	cmp	w0, #0
-   80130:	80 fe ff 54 	b.eq	#-48
+   800f8:	00 10 97 d2 	mov	x0, #47232
+   800fc:	00 e0 a7 f2 	movk	x0, #16128, lsl #16
+   80100:	00 00 40 b9 	ldr	w0, [x0]
+   80104:	e0 1f 00 b9 	str	w0, [sp, #28]
+   80108:	e0 1f 40 b9 	ldr	w0, [sp, #28]
+   8010c:	1f 00 00 71 	cmp	w0, #0
+   80110:	80 fe ff 54 	b.eq	#-48
 ; return message[1] == RESPONSE;
-   80134:	e0 07 40 f9 	ldr	x0, [sp, #8]
-   80138:	00 10 00 91 	add	x0, x0, #4
-   8013c:	01 00 40 b9 	ldr	w1, [x0]
-   80140:	00 00 b0 52 	mov	w0, #-2147483648
-   80144:	3f 00 00 6b 	cmp	w1, w0
-   80148:	e0 17 9f 1a 	cset	w0, eq
-   8014c:	00 1c 00 12 	and	w0, w0, #0xff
+   80114:	e0 07 40 f9 	ldr	x0, [sp, #8]
+   80118:	00 10 00 91 	add	x0, x0, #4
+   8011c:	01 00 40 b9 	ldr	w1, [x0]
+   80120:	00 00 b0 52 	mov	w0, #-2147483648
+   80124:	3f 00 00 6b 	cmp	w1, w0
+   80128:	e0 17 9f 1a 	cset	w0, eq
+   8012c:	00 1c 00 12 	and	w0, w0, #0xff
 ; 
-   80150:	ff 83 00 91 	add	sp, sp, #32
-   80154:	c0 03 5f d6 	ret
+   80130:	ff 83 00 91 	add	sp, sp, #32
+   80134:	c0 03 5f d6 	ret
 
 kernel_main:
 ; {
-   80158:	fd 7b bd a9 	stp	x29, x30, [sp, #-48]!
-   8015c:	fd 03 00 91 	mov	x29, sp
-   80160:	e0 17 00 f9 	str	x0, [sp, #40]
-   80164:	e1 13 00 f9 	str	x1, [sp, #32]
-   80168:	e2 0f 00 f9 	str	x2, [sp, #24]
+   80138:	fd 7b bb a9 	stp	x29, x30, [sp, #-80]!
+   8013c:	fd 03 00 91 	mov	x29, sp
+   80140:	f3 0b 00 f9 	str	x19, [sp, #16]
+   80144:	e0 1f 00 f9 	str	x0, [sp, #56]
+   80148:	e1 1b 00 f9 	str	x1, [sp, #48]
+   8014c:	e2 17 00 f9 	str	x2, [sp, #40]
+; int size = 0;
+   80150:	ff 4f 00 b9 	str	wzr, [sp, #76]
+; char* kernel = 0x80000;
+   80154:	00 01 a0 d2 	mov	x0, #524288
+   80158:	e0 23 00 f9 	str	x0, [sp, #64]
 ; init_uart();
-   8016c:	0f 00 00 94 	bl	#60
-; send('H');
-   80170:	00 09 80 52 	mov	w0, #72
-   80174:	51 00 00 94 	bl	#324
-; send('E');
-   80178:	a0 08 80 52 	mov	w0, #69
-   8017c:	4f 00 00 94 	bl	#316
-; send('L');
-   80180:	80 09 80 52 	mov	w0, #76
-   80184:	4d 00 00 94 	bl	#308
-; send('L');
-   80188:	80 09 80 52 	mov	w0, #76
-   8018c:	4b 00 00 94 	bl	#300
+   8015c:	36 00 00 94 	bl	#216
+; send('S');
+   80160:	60 0a 80 52 	mov	w0, #83
+   80164:	78 00 00 94 	bl	#480
+; send(3);
+   80168:	60 00 80 52 	mov	w0, #3
+   8016c:	76 00 00 94 	bl	#472
+; send(3);
+   80170:	60 00 80 52 	mov	w0, #3
+   80174:	74 00 00 94 	bl	#464
+; send(3);
+   80178:	60 00 80 52 	mov	w0, #3
+   8017c:	72 00 00 94 	bl	#456
+; size = receive();
+   80180:	82 00 00 94 	bl	#520
+   80184:	00 1c 00 12 	and	w0, w0, #0xff
+   80188:	e0 4f 00 b9 	str	w0, [sp, #76]
+; size |= receive() << 8;
+   8018c:	7f 00 00 94 	bl	#508
+   80190:	00 1c 00 12 	and	w0, w0, #0xff
+   80194:	00 5c 18 53 	lsl	w0, w0, #8
+   80198:	e1 4f 40 b9 	ldr	w1, [sp, #76]
+   8019c:	20 00 00 2a 	orr	w0, w1, w0
+   801a0:	e0 4f 00 b9 	str	w0, [sp, #76]
+; size |= receive() << 16;
+   801a4:	79 00 00 94 	bl	#484
+   801a8:	00 1c 00 12 	and	w0, w0, #0xff
+   801ac:	00 3c 10 53 	lsl	w0, w0, #16
+   801b0:	e1 4f 40 b9 	ldr	w1, [sp, #76]
+   801b4:	20 00 00 2a 	orr	w0, w1, w0
+   801b8:	e0 4f 00 b9 	str	w0, [sp, #76]
+; size |= receive() << 24;
+   801bc:	73 00 00 94 	bl	#460
+   801c0:	00 1c 00 12 	and	w0, w0, #0xff
+   801c4:	00 1c 08 53 	lsl	w0, w0, #24
+   801c8:	e1 4f 40 b9 	ldr	w1, [sp, #76]
+   801cc:	20 00 00 2a 	orr	w0, w1, w0
+   801d0:	e0 4f 00 b9 	str	w0, [sp, #76]
 ; send('O');
-   80190:	e0 09 80 52 	mov	w0, #79
-   80194:	49 00 00 94 	bl	#292
-; send(receive());
-   80198:	59 00 00 94 	bl	#356
-   8019c:	00 1c 00 12 	and	w0, w0, #0xff
-   801a0:	46 00 00 94 	bl	#280
-   801a4:	fd ff ff 17 	b	#-12
+   801d4:	e0 09 80 52 	mov	w0, #79
+   801d8:	5b 00 00 94 	bl	#364
+; send('K');
+   801dc:	60 09 80 52 	mov	w0, #75
+   801e0:	59 00 00 94 	bl	#356
+; while(size--){
+   801e4:	07 00 00 14 	b	#28
+; *kernel++ = receive();
+   801e8:	f3 23 40 f9 	ldr	x19, [sp, #64]
+   801ec:	60 06 00 91 	add	x0, x19, #1
+   801f0:	e0 23 00 f9 	str	x0, [sp, #64]
+   801f4:	65 00 00 94 	bl	#404
+   801f8:	00 1c 00 12 	and	w0, w0, #0xff
+   801fc:	60 02 00 39 	strb	w0, [x19]
+; while(size--){
+   80200:	e0 4f 40 b9 	ldr	w0, [sp, #76]
+   80204:	01 04 00 51 	sub	w1, w0, #1
+   80208:	e1 4f 00 b9 	str	w1, [sp, #76]
+   8020c:	1f 00 00 71 	cmp	w0, #0
+   80210:	c1 fe ff 54 	b.ne	#-40
+; kernel = 0x80000;
+   80214:	00 01 a0 d2 	mov	x0, #524288
+   80218:	e0 23 00 f9 	str	x0, [sp, #64]
+; asm("mov lr, #0x80000");
+   8021c:	1e 01 a0 d2 	mov	x30, #524288
+; asm("ret");
+   80220:	c0 03 5f d6 	ret
+; }
+   80224:	1f 20 03 d5 	nop
+   80228:	f3 0b 40 f9 	ldr	x19, [sp, #16]
+   8022c:	fd 7b c5 a8 	ldp	x29, x30, [sp], #80
+   80230:	c0 03 5f d6 	ret
 
 init_uart:
 ; void init_uart(){
-   801a8:	fd 7b ba a9 	stp	x29, x30, [sp, #-96]!
-   801ac:	fd 03 00 91 	mov	x29, sp
-   801b0:	f3 0b 00 f9 	str	x19, [sp, #16]
+   80234:	fd 7b ba a9 	stp	x29, x30, [sp, #-96]!
+   80238:	fd 03 00 91 	mov	x29, sp
+   8023c:	f3 0b 00 f9 	str	x19, [sp, #16]
 ; PL011->CR = 0;
-   801b4:	00 00 82 d2 	mov	x0, #4096
-   801b8:	00 e4 a7 f2 	movk	x0, #16160, lsl #16
-   801bc:	1f 30 00 b9 	str	wzr, [x0, #48]
+   80240:	00 00 82 d2 	mov	x0, #4096
+   80244:	00 e4 a7 f2 	movk	x0, #16160, lsl #16
+   80248:	1f 30 00 b9 	str	wzr, [x0, #48]
 ; message[0] = 8*4;
-   801c0:	00 04 80 52 	mov	w0, #32
-   801c4:	e0 23 00 b9 	str	w0, [sp, #32]
+   8024c:	00 04 80 52 	mov	w0, #32
+   80250:	e0 23 00 b9 	str	w0, [sp, #32]
 ; message[1] = 0;
-   801c8:	ff 27 00 b9 	str	wzr, [sp, #36]
+   80254:	ff 27 00 b9 	str	wzr, [sp, #36]
 ; message[2] = 0x38002; // set clock rate
-   801cc:	40 00 90 52 	mov	w0, #32770
-   801d0:	60 00 a0 72 	movk	w0, #3, lsl #16
-   801d4:	e0 2b 00 b9 	str	w0, [sp, #40]
+   80258:	40 00 90 52 	mov	w0, #32770
+   8025c:	60 00 a0 72 	movk	w0, #3, lsl #16
+   80260:	e0 2b 00 b9 	str	w0, [sp, #40]
 ; message[3] = 12;
-   801d8:	80 01 80 52 	mov	w0, #12
-   801dc:	e0 2f 00 b9 	str	w0, [sp, #44]
+   80264:	80 01 80 52 	mov	w0, #12
+   80268:	e0 2f 00 b9 	str	w0, [sp, #44]
 ; message[4] = 8;
-   801e0:	00 01 80 52 	mov	w0, #8
-   801e4:	e0 33 00 b9 	str	w0, [sp, #48]
+   8026c:	00 01 80 52 	mov	w0, #8
+   80270:	e0 33 00 b9 	str	w0, [sp, #48]
 ; message[5] = 2;           // UART clock
-   801e8:	40 00 80 52 	mov	w0, #2
-   801ec:	e0 37 00 b9 	str	w0, [sp, #52]
+   80274:	40 00 80 52 	mov	w0, #2
+   80278:	e0 37 00 b9 	str	w0, [sp, #52]
 ; message[6] = 4000000;     // 4Mhz
-   801f0:	00 20 81 52 	mov	w0, #2304
-   801f4:	a0 07 a0 72 	movk	w0, #61, lsl #16
-   801f8:	e0 3b 00 b9 	str	w0, [sp, #56]
+   8027c:	00 20 81 52 	mov	w0, #2304
+   80280:	a0 07 a0 72 	movk	w0, #61, lsl #16
+   80284:	e0 3b 00 b9 	str	w0, [sp, #56]
 ; message[7] = 0;           // end tag
-   801fc:	ff 3f 00 b9 	str	wzr, [sp, #60]
+   80288:	ff 3f 00 b9 	str	wzr, [sp, #60]
 ; call_mailbox(message, 8);
-   80200:	e0 83 00 91 	add	x0, sp, #32
-   80204:	01 01 80 52 	mov	w1, #8
-   80208:	a6 ff ff 97 	bl	#-360
+   8028c:	e0 83 00 91 	add	x0, sp, #32
+   80290:	01 01 80 52 	mov	w1, #8
+   80294:	7b ff ff 97 	bl	#-532
 ; address = GP->FSEL1;
-   8020c:	00 e4 a7 d2 	mov	x0, #1059061760
-   80210:	13 04 40 b9 	ldr	w19, [x0, #4]
+   80298:	00 e4 a7 d2 	mov	x0, #1059061760
+   8029c:	13 04 40 b9 	ldr	w19, [x0, #4]
 ; address &= ~((7<<12)|(7<<15));	//set pins
-   80214:	73 66 0e 12 	and	w19, w19, #0xfffc0fff
+   802a0:	73 66 0e 12 	and	w19, w19, #0xfffc0fff
 ; address |=(4<<12)|(4<<15);		//alt0 mode
-   80218:	00 00 88 52 	mov	w0, #16384
-   8021c:	40 00 a0 72 	movk	w0, #2, lsl #16
-   80220:	73 02 00 2a 	orr	w19, w19, w0
+   802a4:	00 00 88 52 	mov	w0, #16384
+   802a8:	40 00 a0 72 	movk	w0, #2, lsl #16
+   802ac:	73 02 00 2a 	orr	w19, w19, w0
 ; GP->FSEL1 = address;
-   80224:	00 e4 a7 d2 	mov	x0, #1059061760
-   80228:	13 04 00 b9 	str	w19, [x0, #4]
+   802b0:	00 e4 a7 d2 	mov	x0, #1059061760
+   802b4:	13 04 00 b9 	str	w19, [x0, #4]
 ; GP->PUD = 0;            
-   8022c:	00 e4 a7 d2 	mov	x0, #1059061760
-   80230:	1f 90 00 b9 	str	wzr, [x0, #144]
+   802b8:	00 e4 a7 d2 	mov	x0, #1059061760
+   802bc:	1f 90 00 b9 	str	wzr, [x0, #144]
 ; delay(150);
-   80234:	c0 12 80 d2 	mov	x0, #150
-   80238:	48 00 00 94 	bl	#288
+   802c0:	c0 12 80 d2 	mov	x0, #150
+   802c4:	47 00 00 94 	bl	#284
 ; GP->PUDCLK0 = (1<<14)|(1<<15);
-   8023c:	00 e4 a7 d2 	mov	x0, #1059061760
-   80240:	01 00 98 52 	mov	w1, #49152
-   80244:	01 94 00 b9 	str	w1, [x0, #148]
+   802c8:	00 e4 a7 d2 	mov	x0, #1059061760
+   802cc:	01 00 98 52 	mov	w1, #49152
+   802d0:	01 94 00 b9 	str	w1, [x0, #148]
 ; delay(150);
-   80248:	c0 12 80 d2 	mov	x0, #150
-   8024c:	43 00 00 94 	bl	#268
+   802d4:	c0 12 80 d2 	mov	x0, #150
+   802d8:	42 00 00 94 	bl	#264
 ; GP->PUDCLK0 = 0;        
-   80250:	00 e4 a7 d2 	mov	x0, #1059061760
-   80254:	1f 94 00 b9 	str	wzr, [x0, #148]
+   802dc:	00 e4 a7 d2 	mov	x0, #1059061760
+   802e0:	1f 94 00 b9 	str	wzr, [x0, #148]
 ; PL011->ICR = 0x7FF;
-   80258:	00 00 82 d2 	mov	x0, #4096
-   8025c:	00 e4 a7 f2 	movk	x0, #16160, lsl #16
-   80260:	e1 ff 80 52 	mov	w1, #2047
-   80264:	01 44 00 b9 	str	w1, [x0, #68]
+   802e4:	00 00 82 d2 	mov	x0, #4096
+   802e8:	00 e4 a7 f2 	movk	x0, #16160, lsl #16
+   802ec:	e1 ff 80 52 	mov	w1, #2047
+   802f0:	01 44 00 b9 	str	w1, [x0, #68]
 ; PL011->IBRD = 2;
-   80268:	00 00 82 d2 	mov	x0, #4096
-   8026c:	00 e4 a7 f2 	movk	x0, #16160, lsl #16
-   80270:	41 00 80 52 	mov	w1, #2
-   80274:	01 24 00 b9 	str	w1, [x0, #36]
+   802f4:	00 00 82 d2 	mov	x0, #4096
+   802f8:	00 e4 a7 f2 	movk	x0, #16160, lsl #16
+   802fc:	41 00 80 52 	mov	w1, #2
+   80300:	01 24 00 b9 	str	w1, [x0, #36]
 ; PL011->FBRD = 0xB;
-   80278:	00 00 82 d2 	mov	x0, #4096
-   8027c:	00 e4 a7 f2 	movk	x0, #16160, lsl #16
-   80280:	61 01 80 52 	mov	w1, #11
-   80284:	01 28 00 b9 	str	w1, [x0, #40]
+   80304:	00 00 82 d2 	mov	x0, #4096
+   80308:	00 e4 a7 f2 	movk	x0, #16160, lsl #16
+   8030c:	61 01 80 52 	mov	w1, #11
+   80310:	01 28 00 b9 	str	w1, [x0, #40]
 ; PL011->LCRH = (1 << 5) | (1 << 6);	//8 bits
-   80288:	00 00 82 d2 	mov	x0, #4096
-   8028c:	00 e4 a7 f2 	movk	x0, #16160, lsl #16
-   80290:	01 0c 80 52 	mov	w1, #96
-   80294:	01 2c 00 b9 	str	w1, [x0, #44]
+   80314:	00 00 82 d2 	mov	x0, #4096
+   80318:	00 e4 a7 f2 	movk	x0, #16160, lsl #16
+   8031c:	01 0c 80 52 	mov	w1, #96
+   80320:	01 2c 00 b9 	str	w1, [x0, #44]
 ; PL011->CR = (1 << 0) | (1 << 8) | (1 << 9); //UARTEN | TXE | RXE
-   80298:	00 00 82 d2 	mov	x0, #4096
-   8029c:	00 e4 a7 f2 	movk	x0, #16160, lsl #16
-   802a0:	21 60 80 52 	mov	w1, #769
-   802a4:	01 30 00 b9 	str	w1, [x0, #48]
+   80324:	00 00 82 d2 	mov	x0, #4096
+   80328:	00 e4 a7 f2 	movk	x0, #16160, lsl #16
+   8032c:	21 60 80 52 	mov	w1, #769
+   80330:	01 30 00 b9 	str	w1, [x0, #48]
 ; }
-   802a8:	1f 20 03 d5 	nop
-   802ac:	f3 0b 40 f9 	ldr	x19, [sp, #16]
-   802b0:	fd 7b c6 a8 	ldp	x29, x30, [sp], #96
-   802b4:	c0 03 5f d6 	ret
+   80334:	1f 20 03 d5 	nop
+   80338:	f3 0b 40 f9 	ldr	x19, [sp, #16]
+   8033c:	fd 7b c6 a8 	ldp	x29, x30, [sp], #96
+   80340:	c0 03 5f d6 	ret
 
 send:
 ; void send(char c){
-   802b8:	ff 43 00 d1 	sub	sp, sp, #16
-   802bc:	e0 3f 00 39 	strb	w0, [sp, #15]
+   80344:	ff 43 00 d1 	sub	sp, sp, #16
+   80348:	e0 3f 00 39 	strb	w0, [sp, #15]
 ; while (PL011->FLAG & TX_FULL) {asm("nop");}
-   802c0:	02 00 00 14 	b	#8
-   802c4:	1f 20 03 d5 	nop
-   802c8:	00 00 82 d2 	mov	x0, #4096
-   802cc:	00 e4 a7 f2 	movk	x0, #16160, lsl #16
-   802d0:	00 18 40 b9 	ldr	w0, [x0, #24]
-   802d4:	00 00 1b 12 	and	w0, w0, #0x20
-   802d8:	1f 00 00 71 	cmp	w0, #0
-   802dc:	41 ff ff 54 	b.ne	#-24
+   8034c:	02 00 00 14 	b	#8
+   80350:	1f 20 03 d5 	nop
+   80354:	00 00 82 d2 	mov	x0, #4096
+   80358:	00 e4 a7 f2 	movk	x0, #16160, lsl #16
+   8035c:	00 18 40 b9 	ldr	w0, [x0, #24]
+   80360:	00 00 1b 12 	and	w0, w0, #0x20
+   80364:	1f 00 00 71 	cmp	w0, #0
+   80368:	41 ff ff 54 	b.ne	#-24
 ; PL011->DATA = c;
-   802e0:	00 00 82 d2 	mov	x0, #4096
-   802e4:	00 e4 a7 f2 	movk	x0, #16160, lsl #16
-   802e8:	e1 3f 40 39 	ldrb	w1, [sp, #15]
-   802ec:	01 00 00 b9 	str	w1, [x0]
+   8036c:	00 00 82 d2 	mov	x0, #4096
+   80370:	00 e4 a7 f2 	movk	x0, #16160, lsl #16
+   80374:	e1 3f 40 39 	ldrb	w1, [sp, #15]
+   80378:	01 00 00 b9 	str	w1, [x0]
 ; }
-   802f0:	1f 20 03 d5 	nop
-   802f4:	ff 43 00 91 	add	sp, sp, #16
-   802f8:	c0 03 5f d6 	ret
+   8037c:	1f 20 03 d5 	nop
+   80380:	ff 43 00 91 	add	sp, sp, #16
+   80384:	c0 03 5f d6 	ret
 
 receive:
 ; char receive(){
-   802fc:	02 00 00 14 	b	#8
+   80388:	02 00 00 14 	b	#8
 ; while (PL011->FLAG & RX_EMPTY) {asm("nop");}
-   80300:	1f 20 03 d5 	nop
-   80304:	00 00 82 d2 	mov	x0, #4096
-   80308:	00 e4 a7 f2 	movk	x0, #16160, lsl #16
-   8030c:	00 18 40 b9 	ldr	w0, [x0, #24]
-   80310:	00 00 1c 12 	and	w0, w0, #0x10
-   80314:	1f 00 00 71 	cmp	w0, #0
-   80318:	41 ff ff 54 	b.ne	#-24
+   8038c:	1f 20 03 d5 	nop
+   80390:	00 00 82 d2 	mov	x0, #4096
+   80394:	00 e4 a7 f2 	movk	x0, #16160, lsl #16
+   80398:	00 18 40 b9 	ldr	w0, [x0, #24]
+   8039c:	00 00 1c 12 	and	w0, w0, #0x10
+   803a0:	1f 00 00 71 	cmp	w0, #0
+   803a4:	41 ff ff 54 	b.ne	#-24
 ; return PL011->DATA;
-   8031c:	00 00 82 d2 	mov	x0, #4096
-   80320:	00 e4 a7 f2 	movk	x0, #16160, lsl #16
-   80324:	00 00 40 b9 	ldr	w0, [x0]
-   80328:	00 1c 00 12 	and	w0, w0, #0xff
+   803a8:	00 00 82 d2 	mov	x0, #4096
+   803ac:	00 e4 a7 f2 	movk	x0, #16160, lsl #16
+   803b0:	00 00 40 b9 	ldr	w0, [x0]
+   803b4:	00 1c 00 12 	and	w0, w0, #0xff
 ; }
-   8032c:	c0 03 5f d6 	ret
+   803b8:	c0 03 5f d6 	ret
 
 putc:
 ; void putc(void* p, char c){
-   80330:	fd 7b be a9 	stp	x29, x30, [sp, #-32]!
-   80334:	fd 03 00 91 	mov	x29, sp
-   80338:	e0 0f 00 f9 	str	x0, [sp, #24]
-   8033c:	e1 5f 00 39 	strb	w1, [sp, #23]
+   803bc:	fd 7b be a9 	stp	x29, x30, [sp, #-32]!
+   803c0:	fd 03 00 91 	mov	x29, sp
+   803c4:	e0 0f 00 f9 	str	x0, [sp, #24]
+   803c8:	e1 5f 00 39 	strb	w1, [sp, #23]
 ; send(c);
-   80340:	e0 5f 40 39 	ldrb	w0, [sp, #23]
-   80344:	dd ff ff 97 	bl	#-140
+   803cc:	e0 5f 40 39 	ldrb	w0, [sp, #23]
+   803d0:	dd ff ff 97 	bl	#-140
 ; 
-   80348:	1f 20 03 d5 	nop
-   8034c:	fd 7b c2 a8 	ldp	x29, x30, [sp], #32
-   80350:	c0 03 5f d6 	ret
-   80354:	00 00 00 00  <unknown>
+   803d4:	1f 20 03 d5 	nop
+   803d8:	fd 7b c2 a8 	ldp	x29, x30, [sp], #32
+   803dc:	c0 03 5f d6 	ret
 
 delay:
 ; subs x0, x0, #1
-   80358:	00 04 00 f1 	subs	x0, x0, #1
+   803e0:	00 04 00 f1 	subs	x0, x0, #1
 ; bne delay
-   8035c:	e1 ff ff 54 	b.ne	#-4
+   803e4:	e1 ff ff 54 	b.ne	#-4
 ; ret
-   80360:	c0 03 5f d6 	ret
-
-mmio_read:
-; ldr w0, [x0]
-   80364:	00 00 40 b9 	ldr	w0, [x0]
-; ret
-   80368:	c0 03 5f d6 	ret
-
-mmio_write:
-; str w1, [x0]
-   8036c:	01 00 00 b9 	str	w1, [x0]
-; ret
-   80370:	c0 03 5f d6 	ret
-
-LED_ACT_ON:
-; ldr x0, =BASE
-   80374:	e0 01 00 58 	ldr	x0, #60
-; ldr w2, =SELECT_LED29
-   80378:	62 01 00 18 	ldr	w2, #44
-; str w2, [x0, #FSEL2]
-   8037c:	02 08 00 b9 	str	w2, [x0, #8]
-; ldr w2, =SET_BIT27
-   80380:	42 01 00 18 	ldr	w2, #40
-; str w2, [x0, #SET0]
-   80384:	02 1c 00 b9 	str	w2, [x0, #28]
-; ret
-   80388:	c0 03 5f d6 	ret
-
-LED_ACT_OFF:
-; ldr x0, =BASE
-   8038c:	20 01 00 58 	ldr	x0, #36
-; ldr w2, =SELECT_LED29
-   80390:	a2 00 00 18 	ldr	w2, #20
-; str w2, [x0, #FSEL2]
-   80394:	02 08 00 b9 	str	w2, [x0, #8]
-; ldr w2, =SET_BIT27
-   80398:	82 00 00 18 	ldr	w2, #16
-; str w2, [x0, #CLR0]
-   8039c:	02 28 00 b9 	str	w2, [x0, #40]
-; ret
-   803a0:	c0 03 5f d6 	ret
-
-$d:
-   803a4:	00 00 00 08 	.word	0x08000000
-   803a8:	00 00 00 20 	.word	0x20000000
-
-$x:
-   803ac:	00 00 00 00  <unknown>
-
-$d:
-   803b0:	00 00 20 3f 	.word	0x3f200000
-   803b4:	00 00 00 00 	.word	0x00000000
+   803e8:	c0 03 5f d6 	ret
